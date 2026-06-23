@@ -1,25 +1,34 @@
-﻿import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import dotenv from 'dotenv';
+import { createApp } from './app';
+import { connectDatabase } from './config/database';
+import { env } from './config/env';
+import './models';
 
-dotenv.config();
+const start = async () => {
+  await connectDatabase();
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+  const app = createApp();
+  app.listen(env.port, () => {
+    console.log(`Server running on port ${env.port}`);
+  });
+};
 
-app.use(helmet());
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
-app.use(morgan('dev'));
-app.use(express.json());
+start().catch((error) => {
+  const pgCode = error?.parent?.code || error?.original?.code;
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'FlowHub API running' });
+  if (pgCode === '28P01') {
+    console.error(
+      'Failed to start FlowHub API: PostgreSQL rejected the DB_USER/DB_PASSWORD in server/.env.',
+    );
+    console.error('Check DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, and DB_NAME.');
+    process.exit(1);
+  }
+
+  if (pgCode === '3D000') {
+    console.error('Failed to start FlowHub API: PostgreSQL database does not exist.');
+    console.error(`Create the database named "${env.database.name}" or update DB_NAME in server/.env.`);
+    process.exit(1);
+  }
+
+  console.error('Failed to start FlowHub API', error);
+  process.exit(1);
 });
-
-app.listen(PORT, () => {
-  console.log(\Server running on port \$PORT\);
-});
-
-export default app;
