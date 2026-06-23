@@ -31,6 +31,10 @@ On startup, Sequelize authenticates and syncs the MVP tables.
 - `POST /api/integrations`
 - `PATCH /api/integrations/:id`
 - `POST /api/integrations/:id/sync`
+- `GET /api/projects`
+- `POST /api/projects`
+- `PATCH /api/projects/:id`
+- `DELETE /api/projects/:id`
 - `GET /api/dashboard/today`
 - `GET /api/dashboard/inbox`
 
